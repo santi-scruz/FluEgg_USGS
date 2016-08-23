@@ -1,7 +1,8 @@
 # Fluvial Egg Drift Simulator (FluEgg)
-A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The model’s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
+A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The models variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
+
 # Code Structure
-The Graphical User Inter Interface (GUI) code for the FluEgg is FluEgg.m and FluEgg.fig. 
+The Graphical User Inter Interface (GUI) and code for the FluEgg model are FluEgg.fig and FluEgg.m. 
 The Main function of FluEgg is called FluEgggui, this function uses the Jump function, in this function particles move (jump) every time step following the random walk and random displacement approach.
 
 # Motivation
@@ -19,10 +20,11 @@ the environmental and hydrodynamic characteristics of the stream where the eggs 
 A complete description of the FluEgg model was presented by Garcia et al. (2013); users can refer to this paper for detailed information on both the mathematical model and the performance of the model.
 
 #References
-Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211–222
+Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., and Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211–222
+Garcia, T., Murphy, E. A., Jackson, P. R., and Garcia, M. H. (2015). Application of the FluEgg model to predict transport of Asian carp eggs in the Saint Joseph River (Great Lakes tributary). Journal of Great Lakes Research, 41(2), 374–386. 
 
 # Installation
-The FluEgg model iswritten in the MATLAB® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
+The FluEgg model is written in the MATLAB® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
 
 ==============================================================================
 FluEgg Release License
@@ -44,7 +46,7 @@ modification, are permitted provided that the following conditions are met:
   this list of conditions and the following disclaimer in the documentation
   and/or other materials provided with the distribution.
 
-* Neither the name of the {organization} nor the names of its
+* Neither the name of the USGS nor the names of its
   contributors may be used to endorse or promote products derived from
   this software without specific prior written permission.
 
@@ -87,7 +89,7 @@ U.S. Government shall be held liable for any damages resulting from
 the authorized or unauthorized use of the information.
 
 ==============================================================================
-Copyrights and Licenses for Third Party Software Distributed with LARVEL:
+Copyrights and Licenses for Third Party Software Distributed with FluEgg:
 ==============================================================================
 The FluEgg program contains code written by third parties.  Such software will
 have its own individual LICENSE.TXT file in the directory in which it appears.
