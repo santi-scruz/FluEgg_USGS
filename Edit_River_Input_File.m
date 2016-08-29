@@ -1,5 +1,25 @@
-function varargout = Edit_River_Input_File(varargin)
+%%%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+%%                       Edit or import FluEgg River Input data           %
+%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+%-------------------------------------------------------------------------%
+% This function is used to import river input data into FluEgg. Currently %
+% there are two options, import an excel, csv or text file, or import a   %
+% steady or unsteady state HEC-RAS project.                                %
+%-------------------------------------------------------------------------%
+%                                                                         %
+%-------------------------------------------------------------------------%
+%   Created by      : Tatiana Garcia                                      %
+%   Last Modified   : May 9, 2016                                         %
+%-------------------------------------------------------------------------%
+% Inputs: River input file (xls,xlsx,csv,txt) or HEC-RAS project (prj)    %
+%        river input file containing cell number,cumulative distance, flow,
+%        velocity magnitude, Vy, Vz, shear velocity, water depth,water    %
+%        temperature.
+% Outputs: FluEgg River input file(s)
+% Copyright 2016 Tatiana Garcia
+%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
+function varargout = Edit_River_Input_File(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -18,23 +38,37 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
+end
 
 function Edit_River_Input_File_OpeningFcn(hObject, ~, handles, varargin)
+ScreenSize=get(0, 'screensize');
+set(handles.River_inputfile_GUI,'Position',[1 1 ScreenSize(3:4)])
+%Logs erros in a log file
 diary('./results/FluEgg_LogFile.txt')
 handles.output = hObject;
 guidata(hObject, handles);
+end
 
 function varargout = Edit_River_Input_File_OutputFcn(~,~, handles) 
 diary off
 varargout{1} = handles.output;
+% if the user suppled an 'exit' argument, close the figure by calling
+% figure's CloseRequestFcn
+if (isfield(handles,'closeFigure') && handles.closeFigure)
+    Edit_River_Input_File_CloseRequestFcn(hObject, eventdata, handles)
+end
+end
 
-function pannel_CreateFcn(~, ~, ~)
+% function pannel_CreateFcn(~, ~, ~)
+% delete(hObject);
+% end
 
-function Riverinput_filename_Callback(~, ~, ~)
 function Riverinput_filename_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+end
+%% <<<<<<<<<<< USER WANTS TO IMPORT A SINGLE RIVER INPUT FILE >>>>>>>>>>>%%
 
 function loadfromfile_Callback(hObject,~, handles)
 %%::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -116,6 +150,7 @@ else
     end
 end %if user pres cancel
 guidata(hObject, handles);% Update handles structure
+end % end function loadfromfile_Callback
 
 function [ks]=Ks_calculate(handles,VX)
 %% Input data needed to calculate ks
@@ -128,7 +163,9 @@ function [ks]=Ks_calculate(handles,VX)
 %%
 	%VX=sqrt(Vmag.^2-Vlat.^2-Vvert.^2);%m/s
 	ks=11*Depth./exp((VX.*0.41)./Ustar);%m
-   
+end
+
+%%:::::PLOT INPUT DATA:::::::::::::::::::::::::::::::::::::::::::::::::::::
 function Riverin_DataPlot(handles)
 %% DepthPlot Riverin data
 Riverinputfile=handles.userdata.Riverinputfile;
@@ -140,15 +177,15 @@ set(handles.DepthPlot,'Visible','on');
 plot(handles.DepthPlot,x,[Riverinputfile(:,3);Riverinputfile(end,3)],'LineWidth',1.5,'Color',[0 0 0]); 
 ylabel(handles.DepthPlot,'H [m]','FontWeight','bold','FontSize',10);
 box(handles.DepthPlot,'on');
-%axis(handles.DepthPlot,[0 max(Riverinputfile(:,2)) 0 max(Riverinputfile(:,3))*1.5]);
+
 xlim(handles.DepthPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% QPlot Riverin data
 set(handles.QPlot,'Visible','on');
 plot(handles.QPlot,x,[Riverinputfile(:,4);Riverinputfile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.QPlot,{'Q [cms]'},'FontWeight','bold','FontSize',10);
-box(handles.QPlot,'on');
-%axis(handles.QPlot,[0 max(Riverinputfile(:,2)) 0 max(Riverinputfile(:,4))*1.5]);
+box(handles.QPlot,'on'); 
+
 xlim(handles.QPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VmagPlot Riverin data
@@ -156,7 +193,6 @@ set(handles.VmagPlot,'Visible','on');
 plot(handles.VmagPlot,x,[Riverinputfile(:,5);Riverinputfile(end,5)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VmagPlot,{'Vmag [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VmagPlot,'on');
-%axis(handles.VmagPlot,[0 max(Riverinputfile(:,2)) 0 max(Riverinputfile(:,5))*1.5]);
 xlim(handles.VmagPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VyPlot Riverin data
@@ -164,11 +200,6 @@ set(handles.VyPlot,'Visible','on');
 plot(handles.VyPlot,x,[Riverinputfile(:,6);Riverinputfile(end,6)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VyPlot,{'Vy [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VyPlot,'on');%check
-% if max(Riverinputfile(:,7))~=0
-% axis(handles.VyPlot,[0 max(Riverinputfile(:,2)) min(Riverinputfile(:,7))*1.5 max(Riverinputfile(:,7))*1.5]);
-% else
-%     xlim(handles.VyPlot,[0 max(Riverinputfile(:,2))]);
-% end
 xlim(handles.VyPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VzPlot Riverin data
@@ -176,11 +207,6 @@ set(handles.VzPlot,'Visible','on');
 plot(handles.VzPlot,x,[Riverinputfile(:,7);Riverinputfile(end,7)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VzPlot,{'Vz [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VzPlot,'on');
-% if max(Riverinputfile(:,7))~=0
-% axis(handles.VzPlot,[0 max(Riverinputfile(:,2)) min(Riverinputfile(:,7))*1.5 max(Riverinputfile(:,7))*1.5]);
-% else
-%     xlim(handles.VzPlot,[0 max(Riverinputfile(:,2))]);
-% end
 xlim(handles.VzPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% UstarPlot Riverin data
@@ -200,10 +226,10 @@ plot(handles.TempPlot,x,[Riverinputfile(:,9);Riverinputfile(end,9)],'LineWidth',
 ylabel(handles.TempPlot,{'T [^oC]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.TempPlot,{'Cumulative distance [Km]'},'FontWeight','bold', 'FontSize',10);
 box(handles.TempPlot,'on');
-%axis(handles.TempPlot,[0 max(Riverinputfile(:,2)) 0 max(Riverinputfile(:,9))*1.5]);
 xlim(handles.TempPlot,[0 max(Riverinputfile(:,2))]);
 
 %==========================================================================
+end
 
 function RiverInputFile_CellEditCallback(hObject, eventdata, handles)
 if  isfield(handles,'userdata')==0
@@ -215,8 +241,10 @@ end
 handles.userdata.Riverinputfile=get(handles.RiverInputFile,'Data');
 guidata(hObject, handles);% Update handles structure
 Riverin_DataPlot(handles)
+end
 
 function RiverInputFile_CellSelectionCallback(~, eventdata, handles)
+end
 
 function ContinueButton_Callback(hObject, eventdata, handles)
 if  isfield(handles,'userdata')==0
@@ -225,14 +253,18 @@ if  isfield(handles,'userdata')==0
    uiwait(ed); 
    return
 end
+%% Load data for code audit
+%===========================================================================================
 Riverinputfile=handles.userdata.Riverinputfile;
-CumlDistance=Riverinputfile(:,2);%Km
-Depth=Riverinputfile(:,3);           %m
-Q=Riverinputfile(:,4);                 %m3/s
-Vmag=Riverinputfile(:,5);           %m/s
-Vlat=Riverinputfile(:,6);              %m/s
-Vvert=Riverinputfile(:,7);            %m/s
-Ustar=Riverinputfile(:,8);            %m/s
+
+% Create hydraulic variables
+CumlDistance = Riverinputfile(:,2);   %Km
+Depth = Riverinputfile(:,3);          %m
+Q = Riverinputfile(:,4);              %m3/s
+Vmag = Riverinputfile(:,5);           %m/s
+Vlat = Riverinputfile(:,6);           %m/s
+Vvert = Riverinputfile(:,7);          %m/s
+Ustar = Riverinputfile(:,8);          %m/s
 %==========================================================================
 %% Error  %Code audit 03/2015 TG
 if  any(CumlDistance<=0)
@@ -289,13 +321,17 @@ temp_variables.Temp=Riverinputfile(:,9);         %C
 temp_variables.ks=ks;  
 temp_variables.Width=Width;
 save './Temp/temp_variables.mat' 'temp_variables'
+
+%=========================================================================
 %% Updating spawning location to the middle of the cell
    %% getting main handles
    hFluEggGui=getappdata(0,'hFluEggGui');
    handlesmain=getappdata(hFluEggGui, 'handlesmain');
-   %%
+   %If user input data, autopopulate lateral position of spawning location
    set(handlesmain.Yi_input,'String',floor(Width(1)*100/2)/100);
    guidata(hObject, handles);% Update handles structure
+
+%=========================================================================
 %% Updating River Geometry Summary
 set(handlesmain.MinX,'String',floor(min(CumlDistance)*10)/10);
 set(handlesmain.MaxX,'String',floor(max(CumlDistance)*10)/10);
@@ -305,6 +341,7 @@ set(handlesmain.MinH,'String',floor(min(Depth)*10)/10);
 set(handlesmain.MaxH,'String',floor(max(Depth)*10)/10);
 diary off
 close();
+end
 
 function SaveFile_button_Callback(hObject, eventdata, handles)
 [file,path] = uiputfile('*.txt','Save modified file as');
@@ -317,11 +354,10 @@ end
 hdr=handles.userdata.Riverinputfile_hdr;
 dlmwrite(strFilename,[sprintf('%s\t',hdr{:}) ''],'');
 dlmwrite(strFilename,get(handles.RiverInputFile,'Data'),'-append','delimiter','\t','precision', 6);
+end
 
-function River_inputfile_GUI_CreateFcn(hObject, eventdata, handles)
-%%Creates GUI
-% --------------------------------------------------------------------
 function tools_ks_Callback(hObject, eventdata, handles)
+end
 
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %% <<<<<<<<<<<<<<<<<<<<<<<<< END OF FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>>>%%
