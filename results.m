@@ -879,7 +879,7 @@ end
         subaxis(1,1,1,'MR',0.1,'ML',0.095,'MB',0.12,'MT',0.05);
         %%
         cdf_Nsusp=cumsum(Nsusp*100/size(X_at_Time,1));
-        percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_Time,1);
+        percentage_of_Eggs=[Nbot' Nsusp]*100/size(X_at_Time,1);
         bar1=bar(bids,percentage_of_Eggs,1,'stacked');%,'FaceColor',[0.3804,0.8118,0.8980])
         set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980]);
         set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
