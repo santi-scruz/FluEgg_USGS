@@ -411,20 +411,41 @@ Jump;
                     %% Diameter
                     DiamStd = 0.2631.*exp(-time/22410)+0.3073;
                 	%% Density
+                    %Fix the maximum density standard deviation to be the
+                    %max observed (LJ March 2017)
                     RhoeStd = 22.4.*exp(-time/1894)+0.4103;
+                    for jj=1:length(RhoeStd)
+                        if RhoeStd(jj)>8.1592
+                            RhoeStd(jj)=8.1592;
+                        end
+                    end
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             elseif strcmp(specie,'Bighead')
                 %% STD
                     %% Diameter
                     DiamStd = 0.1788.*exp(-time/13570)+0.44;
                     %% Density
+                    %Fix the maximum density standard deviation to be the
+                    %max observed (LJ March 2017)
                     RhoeStd = 63.12*exp(-time/595)+0.6292;
+                    for jj=1:length(RhoeStd)
+                        if RhoeStd(jj)>7.4703
+                            RhoeStd(jj)=7.4703;
+                        end
+                    end
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             else %case Grass Carp : TG March,2015
                      %% Diameter
                     DiamStd = 0.4759.*exp(-time/14150)+0.4586;
                     %% Density
+                    %Fix the maximum density standard deviation to be the
+                    %max observed (LJ March 2017)
                     RhoeStd = 19.28.*exp(-time/1973)+1.029;
+                    for jj=1:length(RhoeStd)
+                        if RhoeStd(jj)>9.7901
+                            RhoeStd(jj)=9.7901;
+                        end
+                    end
             end % Species selection
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			%  The diameter and density are calculated at time 't' by using the value of the 
@@ -436,12 +457,12 @@ Jump;
 			
             %% Diameter fit + scatter
             Dvar(tt,1) = single(normrnd(D(tt),DiamStd(tt)));
-            while (Dvar(tt)>=D(tt)+2*DiamStd(tt))||(Dvar(tt)<=D(tt)-2*DiamStd(tt))
+            while (Dvar(tt)>=D(tt)+DiamStd(tt))||(Dvar(tt)<=D(tt)-DiamStd(tt))
                 Dvar(tt) = single(normrnd(D(tt),DiamStd(tt)));
             end
             %% Fitted density of the eggs  + scatter
             Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
-            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd(tt))
+            while (Rhoevar(tt)>=Rhoe_ref(tt)+RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-RhoeStd(tt))
                 Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
             end
         end
@@ -533,8 +554,8 @@ Jump;
             % Reflecting Boundary: Iff Eggs are located outside the
             % upstream boundary condition
             check = X(t,a);
-            check(check<d/2) = d-check(check<d/2);
             if Inv_mod==1
+              check(check<d/2) = d-check(check<d/2);
             if length(check<d/2)>1 && Warning_flag==0
                 hh=msgbox('Some eggs crossed the upstream boundary and where bounced back to the domain','FluEgg Warning','warn');
                 pause(2)
@@ -544,6 +565,13 @@ Jump;
                 catch
                 end
             end 
+            elseif sum(check<d/2)>=1
+                ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                minDt = 0; %terminate the simulation
+                Exit=1;
+                return
             end
             X(t,a) = check; %The new location of the eggs is check;
             check = []; %reset check
@@ -566,7 +594,7 @@ Jump;
                 Vswim(a) = zeros(length(Vzpart(a)),1);
             end
             
-            Z(t,a) = Z(t-1,a)'+Inv_mod*(Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime))+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
+            Z(t,a) = Z(t-1,a)'+Inv_mod*(Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt)));%m
             
             %% Movement in Z
             % Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
@@ -641,8 +669,9 @@ Jump;
         Folderpath=['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
             get(handles.Dt, 'String'),'s/'];
         
-        %%
-        if handles.userdata.Batch==1
+        %% If Batch mode is activated
+        Batchmode=get(handles.Batch,'Checked');
+        if strcmp(Batchmode,'on')
             outputfile = [Folderpath,'Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
                 get(handles.Dt, 'String'),'s','run ',num2str(handles.userdata.RunNumber) '.mat'];
         else
@@ -732,13 +761,13 @@ Jump;
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
                 case 'Parabolic Turbulent Diffusivity'
                     Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));
-                    Zprime=ZR+Inv_mod*((0.5*Kprime*Dt));
+                    Zprime=ZR+(0.5*Kprime*Dt);
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
                 case 'Parabolic-Constant Turbulent Diffusivity'
                     Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));%dimensionless
                     Kprime(ZR./H(a)>=0.5)=0;  %constant portion
-                    Zprime=ZR+Inv_mod*((0.5*Kprime*Dt));
+                    Zprime=ZR+(0.5*Kprime*Dt);
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt  %% Parabolic function
                     Kz(ZR./H(a)>=0.5)=B(ZR./H(a)>=0.5).*0.25*0.41.*ustar(ZR./H(a)>=0.5).*H(ZR./H(a)>=0.5);  %% Constant part, corresponding to max diffisivity, refference Van Rijin
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
@@ -776,20 +805,24 @@ Jump;
         
         %% If not doing forward modeling.
         if Inv_mod==1
-        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
+        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));%If egg is in a new cell
         else %% If we are doing inverse modeling
-            check_Eggs_are_in_domain=(cell-1<1);%Are the eggs istill in the domain????
-            if sum(check_Eggs_are_in_domain)>=1
-                 ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+         %For eggs in cells>1
+         %find eggs that crossed a new cell
+         [c,~]=find(X(t,cell>1)'<(CumlDistance(cell(cell>1)-1)*1000));
+         eggs_in_first_cell=cell==1;
+         if sum(eggs_in_first_cell)>=1
+          [out,~]=find(X(t,eggs_in_first_cell)'<0);
+          if length(out)>1
+              ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
                 set(ed, 'WindowStyle', 'modal');
                 uiwait(ed);
                 minDt = 0; %terminate the simulation
                 Exit=1;
                 return
-            else %If eggs are still within the domain
-             [c,~]=find(X(t,:)'<(CumlDistance(cell-1)*1000));
-            end
-        end
+          end
+         end
+        end %End if Inv mod
         
         for i=1:length(c)
             egg_index=c(i);
